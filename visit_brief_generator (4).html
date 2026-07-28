@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Visitors brief generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1C2B3A;
+    --navy-2:#2B4256;
+    --steel:#5E86A0;
+    --paper:#F6F3EC;
+    --paper-2:#EFEAE0;
+    --clay:#B4502E;
+    --clay-dark:#7C3A22;
+    --ink:#1A1A18;
+    --mortar:#8B8A83;
+    --line:#D8D3C4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:40px 28px 64px;
+  }
+  .masthead{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:2px solid var(--navy);
+    padding-bottom:14px;
+    margin-bottom:6px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--clay-dark);
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:30px;
+    margin:0;
+    color:var(--navy);
+    letter-spacing:-0.01em;
+  }
+  .masthead .meta{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--mortar);
+    text-align:right;
+    line-height:1.6;
+  }
+  .coursing{
+    height:10px;
+    margin-bottom:32px;
+    background-image:
+      repeating-linear-gradient(90deg, var(--clay) 0 34px, transparent 34px 38px);
+    background-size:38px 4px;
+    background-repeat:repeat-x;
+    opacity:0.55;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    grid-template-rows:auto auto;
+    gap:32px;
+    align-items:start;
+  }
+  .brief-panel{
+    grid-column:2;
+    grid-row:1 / span 2;
+  }
+  @media (max-width:820px){
+    .grid{grid-template-columns:1fr;}
+    .brief-panel{grid-column:1; grid-row:auto;}
+  }
+
+  .panel{
+    background:#fff;
+    border:1px solid var(--line);
+  }
+  .panel-head{
+    background:var(--navy);
+    color:var(--paper);
+    padding:10px 16px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+  }
+  .panel-body{padding:20px;}
+
+  label{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--mortar);
+    margin:16px 0 6px;
+  }
+  label:first-child{margin-top:0;}
+  input, select, textarea{
+    width:100%;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:2px;
+  }
+  input:focus, select:focus, textarea:focus{
+    outline:none;
+    border-color:var(--steel);
+    background:#fff;
+  }
+  textarea{resize:vertical; min-height:96px; line-height:1.5;}
+
+  button{
+    margin-top:20px;
+    width:100%;
+    background:var(--clay);
+    color:#fff;
+    border:none;
+    padding:12px 14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  button:hover{background:var(--clay-dark);}
+  button:disabled{background:var(--mortar); cursor:default;}
+
+  .hint{
+    font-size:12px;
+    color:var(--mortar);
+    margin-top:10px;
+    line-height:1.5;
+  }
+
+  .doc{
+    position:relative;
+    min-height:420px;
+    padding:36px 40px;
+  }
+  .doc::before, .doc::after,
+  .doc .c2::before, .doc .c2::after{
+    content:"";
+    position:absolute;
+    width:16px;
+    height:16px;
+    border:1.5px solid var(--steel);
+    opacity:0.6;
+  }
+  .doc::before{top:14px; left:14px; border-right:none; border-bottom:none;}
+  .doc::after{top:14px; right:14px; border-left:none; border-bottom:none;}
+  .doc .c2::before{bottom:14px; left:14px; border-right:none; border-top:none;}
+  .doc .c2::after{bottom:14px; right:14px; border-left:none; border-top:none;}
+
+  .empty{
+    color:var(--mortar);
+    font-size:14px;
+    line-height:1.7;
+  }
+  .empty .eyebrow{margin-bottom:10px;}
+
+  .brief h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:20px;
+    font-weight:600;
+    color:var(--navy);
+    margin:0 0 2px;
+  }
+  .brief .sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--clay-dark);
+    letter-spacing:0.05em;
+    margin-bottom:18px;
+  }
+  .brief-content{
+    font-size:14px;
+    line-height:1.75;
+    white-space:pre-wrap;
+  }
+  .brief-content strong{color:var(--navy);}
+
+  .loading{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--steel);
+  }
+  .error{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--clay-dark);
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    padding:12px;
+  }
+
+  .history-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+  .history-item:last-child{border-bottom:none;}
+  .history-item:hover .history-name{color:var(--clay-dark);}
+  .history-main{overflow:hidden;}
+  .history-name{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13px;
+    font-weight:500;
+    color:var(--navy);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .history-meta{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--mortar);
+    margin-top:2px;
+  }
+  .history-delete{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--mortar);
+    background:none;
+    border:none;
+    width:auto;
+    margin:0;
+    padding:2px 6px;
+    cursor:pointer;
+    text-transform:none;
+  }
+  .history-delete:hover{color:var(--clay-dark); background:none;}
+  .history-clear{
+    margin-top:14px;
+    background:none;
+    color:var(--mortar);
+    border:1px solid var(--line);
+  }
+  .history-clear:hover{background:var(--paper-2); color:var(--clay-dark);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <h1>Visitors brief generator</h1>
+    </div>
+    <div class="meta">Monumental<br>Amsterdam · Plantage HQ</div>
+  </div>
+  <div class="coursing"></div>
+
+  <div class="grid">
+
+    <div class="panel">
+      <div class="panel-head">Visit intake</div>
+      <div class="panel-body">
+        <details id="api-key-details" style="margin-bottom:18px;">
+          <summary style="cursor:pointer; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--mortar);">API key <span id="api-key-status-badge"></span></summary>
+          <div style="margin-top:8px;">
+            <label for="api-key">Anthropic API key</label>
+            <input id="api-key" type="password" placeholder="sk-ant-...">
+            <p class="hint">Stored only in this browser (localStorage), never sent anywhere except directly to Anthropic's API. This is a demo shortcut — a real deployment would keep the key server-side, not in client code.</p>
+            <button id="save-key" type="button" style="background:var(--navy); margin-top:8px;">Save key</button>
+          </div>
+        </details>
+
+        <label for="name">Visitor name</label>
+        <input id="name" type="text" placeholder="e.g. Sam Whitfield">
+
+        <label for="role">Role and organisation</label>
+        <input id="role" type="text" placeholder="e.g. Partner, Khosla Ventures">
+
+        <button id="research" type="button" style="background:var(--navy); margin-top:10px;">Research visitor online</button>
+        <p class="hint" id="research-status"></p>
+
+        <label for="purpose">Purpose of visit</label>
+        <select id="purpose">
+          <option>Investor visit</option>
+          <option>Press or media visit</option>
+          <option>Prospective contractor / customer</option>
+          <option>Candidate site tour</option>
+          <option>Other</option>
+        </select>
+
+        <label for="location-type">Visit location</label>
+        <select id="location-type">
+          <option value="hq">Amsterdam HQ (Plantage)</option>
+          <option value="site-nl">Construction site — Netherlands</option>
+          <option value="site-uk">Construction site — UK</option>
+          <option value="other">Other location</option>
+        </select>
+
+        <div id="site-address-wrap" style="display:none;">
+          <label for="site-address">Site address / city</label>
+          <input id="site-address" type="text" placeholder="e.g. Assendelft, Noord-Holland — active bricklaying deployment">
+
+          <label for="shoe">Shoe size (for site PPE)</label>
+          <input id="shoe" type="text" placeholder="e.g. EU 43">
+        </div>
+
+        <div id="media-fields" style="display:none; border-left:2px solid var(--clay); padding-left:12px; margin-top:16px;">
+          <p class="eyebrow" style="margin-bottom:2px;">Media profile</p>
+          <label for="outlet">Outlet / channel</label>
+          <input id="outlet" type="text" placeholder="e.g. The Generalist podcast">
+
+          <label for="reach">Audience size / reach</label>
+          <input id="reach" type="text" placeholder="e.g. 40K newsletter subscribers, ~15K listens/episode">
+
+          <label for="why-matters">Why this matters to us</label>
+          <textarea id="why-matters" style="min-height:64px;" placeholder="e.g. reaches the VC/founder crowd we want in our next round; read by other construction execs; shapes how the US market first hears about us"></textarea>
+
+          <label for="key-message">Key message to land</label>
+          <textarea id="key-message" style="min-height:64px;" placeholder="The one thing you want them to walk away with or quote — the line you bridge back to, whatever they ask"></textarea>
+        </div>
+
+        <div id="sales-fields" style="display:none; border-left:2px solid var(--clay); padding-left:12px; margin-top:16px;">
+          <p class="eyebrow" style="margin-bottom:2px;">Sales context</p>
+          <label for="pipeline">Active / upcoming projects</label>
+          <textarea id="pipeline" style="min-height:64px;" placeholder="e.g. 200-unit residential development in Utrecht breaking ground Q1 2027; known to be bidding on 3 social housing tenders"></textarea>
+
+          <label for="pain-point">Known pain point</label>
+          <textarea id="pain-point" style="min-height:64px;" placeholder="e.g. publicly cited bricklayer shortage delaying two projects this year; or currently piloting a competitor's robot"></textarea>
+        </div>
+
+        <label for="notes">Background notes</label>
+        <textarea id="notes" placeholder="Paste anything you have: LinkedIn bio, prior emails, what they care about, portfolio focus, questions they've raised before."></textarea>
+
+        <details style="margin-top:18px;">
+          <summary style="cursor:pointer; font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--mortar);">More details (optional)</summary>
+          <div style="margin-top:4px;">
+            <label for="duration">Approx. visit duration</label>
+            <select id="duration">
+              <option>30 minutes</option>
+              <option>1 hour</option>
+              <option selected>2 hours</option>
+              <option>Half day</option>
+              <option>Full day</option>
+            </select>
+
+            <label for="contact">First point of contact (Monumental)</label>
+            <input id="contact" type="text" placeholder="e.g. Priya (BizOps) — met at TechCrunch Disrupt, May 2026">
+
+            <label for="team">Team members present</label>
+            <textarea id="team" placeholder="Who's attending and their role, e.g. Salar (CEO) — opening + vision, Priya (Eng lead) — Atrium demo, you — logistics host" style="min-height:64px;"></textarea>
+          </div>
+        </details>
+
+        <button id="go">Generate brief</button>
+        <p class="hint">Generates a short, scannable one-pager.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">Past briefs</div>
+      <div class="panel-body" id="history-panel">
+        <p class="hint" id="history-empty">No briefs generated yet this session. Generated briefs are saved automatically and stay on this device.</p>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <div class="panel brief-panel">
+      <div class="panel-head">Generated brief</div>
+      <div class="doc">
+        <div class="c2"></div>
+        <div id="output">
+          <div class="empty">
+            <p class="eyebrow">Awaiting input</p>
+            <p>Fill in name, role, and purpose (everything else is optional) and generate. Output is a short one-pager — scannable in under a minute.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API_KEY_STORAGE = 'monumental_demo_anthropic_key';
+const apiKeyInput = document.getElementById('api-key');
+const apiKeyBadge = document.getElementById('api-key-status-badge');
+const apiKeyDetails = document.getElementById('api-key-details');
+const saveKeyBtn = document.getElementById('save-key');
+
+function getApiKey() {
+  try { return localStorage.getItem(API_KEY_STORAGE) || ''; } catch { return ''; }
+}
+
+function updateApiKeyBadge() {
+  const hasKey = !!getApiKey();
+  apiKeyBadge.textContent = hasKey ? '— saved' : '— not set';
+  apiKeyBadge.style.color = hasKey ? 'var(--steel)' : 'var(--clay-dark)';
+  apiKeyDetails.open = !hasKey;
+}
+
+const savedKey = getApiKey();
+if (savedKey) apiKeyInput.value = savedKey;
+updateApiKeyBadge();
+
+saveKeyBtn.addEventListener('click', () => {
+  const val = apiKeyInput.value.trim();
+  try {
+    if (val) localStorage.setItem(API_KEY_STORAGE, val);
+    else localStorage.removeItem(API_KEY_STORAGE);
+  } catch {}
+  updateApiKeyBadge();
+  if (val) apiKeyDetails.open = false;
+});
+
+function anthropicHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "x-api-key": getApiKey(),
+    "anthropic-version": "2023-06-01",
+    "anthropic-dangerous-direct-browser-access": "true"
+  };
+}
+
+const btn = document.getElementById('go');
+const output = document.getElementById('output');
+const purposeSelect = document.getElementById('purpose');
+const mediaFields = document.getElementById('media-fields');
+const salesFields = document.getElementById('sales-fields');
+
+function togglePurposeFields() {
+  mediaFields.style.display = purposeSelect.value === 'Press or media visit' ? 'block' : 'none';
+  salesFields.style.display = purposeSelect.value === 'Prospective contractor / customer' ? 'block' : 'none';
+}
+purposeSelect.addEventListener('change', togglePurposeFields);
+togglePurposeFields();
+
+const locationSelect = document.getElementById('location-type');
+const siteAddressWrap = document.getElementById('site-address-wrap');
+
+function toggleSiteAddress() {
+  siteAddressWrap.style.display = locationSelect.value !== 'hq' ? 'block' : 'none';
+}
+locationSelect.addEventListener('change', toggleSiteAddress);
+toggleSiteAddress();
+
+const researchBtn = document.getElementById('research');
+const researchStatus = document.getElementById('research-status');
+
+researchBtn.addEventListener('click', async () => {
+  const rName = document.getElementById('name').value.trim();
+  const rRole = document.getElementById('role').value.trim();
+  const notesField = document.getElementById('notes');
+  const isPressNow = document.getElementById('purpose').value === 'Press or media visit';
+  const isContractorNow = document.getElementById('purpose').value === 'Prospective contractor / customer';
+
+  if (!rName) {
+    researchStatus.textContent = 'Enter a visitor name first.';
+    return;
+  }
+  if (!getApiKey()) {
+    researchStatus.textContent = 'Add an API key above first (click "API key" to expand).';
+    apiKeyDetails.open = true;
+    return;
+  }
+
+  researchBtn.disabled = true;
+  researchBtn.textContent = 'Researching…';
+  researchStatus.textContent = 'Searching the web for public info on this person…';
+
+  let labels = ['NOTES'];
+  if (isPressNow) labels = labels.concat(['OUTLET', 'REACH', 'WHY_IT_MATTERS', 'KEY_MESSAGE']);
+  if (isContractorNow) labels = labels.concat(['PIPELINE', 'PAIN_POINT']);
+
+  const researchPrompt = `Search the web for publicly available information about ${rName}${rRole ? ', ' + rRole : ''}, relevant to preparing a site-visit briefing for Monumental, an Amsterdam construction-robotics company (autonomous bricklaying robots, recently raised a $32M Series B led by Khosla Ventures, expanding into the US). Look for their professional background, areas of focus, recent public statements, interviews, or articles, and anything they've said publicly about construction, robotics, automation, or labour markets.${isPressNow ? ` This visitor is press/media — also research the specific outlet or channel they represent and its approximate audience size or reach.` : ''}${isContractorNow ? ` This visitor represents a prospective contractor or customer — also research their company's active or upcoming construction projects/developments, and any publicly stated challenges around labour, cost, or delivery timelines.` : ''}
+
+Respond in plain text using exactly these labels, each on its own line, in this order, with no commentary outside them:
+NOTES: 4-6 concise sentences suitable for pasting into a "background notes" field — professional background, focus areas, and any prior public statements relevant to this visit.${isPressNow ? `
+OUTLET: the name of the outlet or channel, in a few words.
+REACH: approximate audience size or reach, in a few words (e.g. "40K newsletter subscribers, ~15K listens/episode"). If you can't verify real numbers, give a rough estimate and say it's approximate.
+WHY_IT_MATTERS: one sentence on why coverage from this outlet would be strategically useful for Monumental right now.
+KEY_MESSAGE: one suggested line Monumental should aim to land or get quoted, grounded in the visitor's likely angle.` : ''}${isContractorNow ? `
+PIPELINE: their known active or upcoming projects/developments — company name, project type, location, timing if found. A short list is fine.
+PAIN_POINT: a specific challenge they've publicly mentioned (labour shortage, cost overruns, delivery delays, quality issues). If nothing found, say so and suggest a plausible pain point based on their sector and region instead of leaving it blank.` : ''}
+
+If you can't find reliable public information for a field, say so plainly in that field rather than guessing confidently.`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: anthropicHeaders(),
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: (isPressNow || isContractorNow) ? 900 : 700,
+        messages: [{ role: "user", content: researchPrompt }],
+        tools: [{ type: "web_search_20250305", name: "web_search" }]
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.error?.message || `API error (${response.status})`);
+    const text = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n')
+      .trim();
+
+    if (!text) throw new Error('No results returned');
+
+    const parsed = {};
+    labels.forEach((label, i) => {
+      const rest = labels.slice(i + 1).join('|');
+      const pattern = rest
+        ? new RegExp(label + ':\\s*([\\s\\S]*?)(?=\\n(?:' + rest + '):|$)', 'i')
+        : new RegExp(label + ':\\s*([\\s\\S]*)', 'i');
+      const match = text.match(pattern);
+      parsed[label] = match ? match[1].trim() : '';
+    });
+
+    const appendResearch = (field, value) => {
+      if (!value) return;
+      const existing = field.value.trim();
+      field.value = existing ? existing + '\n\n[Research] ' + value : value;
+    };
+    const fillIfEmpty = (field, value) => {
+      if (!value) return;
+      if (!field.value.trim()) field.value = value;
+    };
+
+    appendResearch(notesField, parsed.NOTES);
+
+    let statusMsg = 'Research added to background notes below — review and edit before generating.';
+    if (isPressNow) {
+      fillIfEmpty(document.getElementById('outlet'), parsed.OUTLET);
+      fillIfEmpty(document.getElementById('reach'), parsed.REACH);
+      appendResearch(document.getElementById('why-matters'), parsed.WHY_IT_MATTERS);
+      appendResearch(document.getElementById('key-message'), parsed.KEY_MESSAGE);
+      statusMsg = 'Research added to background notes and media profile below — review and edit before generating.';
+    }
+    if (isContractorNow) {
+      appendResearch(document.getElementById('pipeline'), parsed.PIPELINE);
+      appendResearch(document.getElementById('pain-point'), parsed.PAIN_POINT);
+      statusMsg = 'Research added to background notes and sales context below — review and edit before generating.';
+    }
+    researchStatus.textContent = statusMsg;
+  } catch (err) {
+    researchStatus.textContent = 'Could not complete research: ' + err.message + '. You can still fill in notes manually.';
+  } finally {
+    researchBtn.disabled = false;
+    researchBtn.textContent = 'Research visitor online';
+  }
+});
+
+btn.addEventListener('click', async () => {
+  const name = document.getElementById('name').value.trim() || 'the visitor';
+  const role = document.getElementById('role').value.trim();
+  const contact = document.getElementById('contact').value.trim();
+  const purpose = document.getElementById('purpose').value;
+  const locationType = document.getElementById('location-type').value;
+  const siteAddress = document.getElementById('site-address').value.trim();
+  const locationLabels = {
+    'hq': 'Monumental HQ, Amsterdam (Plantage)',
+    'site-nl': `Construction site, Netherlands${siteAddress ? ' — ' + siteAddress : ''}`,
+    'site-uk': `Construction site, UK${siteAddress ? ' — ' + siteAddress : ''}`,
+    'other': siteAddress || 'Other location (unspecified)'
+  };
+  const location = locationLabels[locationType];
+  const isSiteVisit = locationType !== 'hq';
+  const duration = document.getElementById('duration').value;
+  const notes = document.getElementById('notes').value.trim();
+  const team = document.getElementById('team').value.trim();
+  const shoe = document.getElementById('shoe').value.trim();
+  const isPress = purpose === 'Press or media visit';
+  const outlet = isPress ? document.getElementById('outlet').value.trim() : '';
+  const reach = isPress ? document.getElementById('reach').value.trim() : '';
+  const whyMatters = isPress ? document.getElementById('why-matters').value.trim() : '';
+  const keyMessage = isPress ? document.getElementById('key-message').value.trim() : '';
+  const isContractor = purpose === 'Prospective contractor / customer';
+  const pipeline = isContractor ? document.getElementById('pipeline').value.trim() : '';
+  const painPoint = isContractor ? document.getElementById('pain-point').value.trim() : '';
+
+  if (!getApiKey()) {
+    output.innerHTML = '<p class="error">Add an API key first — click "API key" above the visitor name field to expand it.</p>';
+    apiKeyDetails.open = true;
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  output.innerHTML = '<p class="loading">Drafting brief…</p>';
+
+  const COMPANY_CONTEXT = `Monumental is an Amsterdam construction-robotics company founded in 2021 (originally as "Terraform") by CEO Salar al Khafaji and CTO Sebastiaan Visser, both previously of Silk, a data-visualisation company acquired by Palantir in 2016. The company describes its mission as making construction primarily software-defined, aiming for a future where bespoke buildings can go up within a single day using minimal labour. Monumental is vertically integrated — it does its own hardware manufacturing and supply chain, not just software. The team is roughly 25-100 people, mostly engineers and technicians, with hires from Palantir, Qualcomm, Dyson, Shopify, Tesla, Meta, and 1X; the office sits in the Plantage neighbourhood of Amsterdam and the company is explicitly in-office, not remote-first.
+
+Product: Monumental builds autonomous bricklaying robots that work as a trio on site — two small carrier robots (nicknamed Petra and Panama) ferry bricks and mortar, while the lead robot lays brick with a claw and extrudes mortar. Everything is coordinated by Atrium, Monumental's proprietary AI platform, which has four parts: Design (parametric facade planning that pre-computes every brick and joint), Align (photogrammetry that 3D-scans the real site and catches millimetre-scale mismatches against the blueprint before building starts), Build (real-time multi-robot coordination via a custom planning language called Plan), and Calibrate (software-driven calibration that compensates for using cheap, non-precision-machined parts).
+
+Business model: "wall-as-a-service" — Monumental acts as an autonomous subcontractor and bills contractors for completed walls, not robot rental or purchase. This means no capex for the client and no new building-code approval hurdles, since the robots use whatever standard bricks and mortar the contractor already specifies.
+
+Funding: $25M Series A in Feb 2024 (led by Plural and Hummingbird), followed by a $32M Series B in July 2026 led by Khosla Ventures, with Plural and Hummingbird participating. This new round funds the company's first expansion into the US.
+
+Traction: fleet of 150+ robots deployed across the Netherlands and UK, having built 100+ homes plus a school, a community centre, a hotel, and canal walls — nearly half of those homes completed in just the last three months, signalling a sharp acceleration. In June 2025 the company delivered its first-ever full block of 8 houses bricked entirely by a robot fleet, corners included, a world first.
+
+Competitive landscape: FBR/Hadrian X (Australia) makes a truck-mounted robotic arm costing ~$6M per machine and sells/leases it, still largely pre-revenue; Toggle (New York) automates rebar assembly, ~$15M raised; CyBe Construction (Netherlands) 3D-prints concrete structures; All3 (Berlin, $25M seed) automates the whole building process from design to move-in. Monumental's differentiator versus all of them is that it takes on the labour risk itself rather than selling equipment.
+
+Sector backdrop: the UK is short roughly 20,000 bricklayers annually; the US construction industry needs 349,000 net new workers in 2026 alone against a housing shortfall of 3-4 million units; construction is 13% of world GDP but has seen almost no productivity growth in 50 years. CEO al Khafaji is candid that robots won't solve the shortage alone ("You could have 10,000 robots a day and we would literally have just touched a few percentage points of the shortage") — the pitch is about expanding capacity, not full automation.`;
+
+  const PURPOSE_ANGLES = {
+    'Investor visit': `This is an investor visit. Likely questions should center on investment thesis fit, market sizing, unit economics of the wall-as-a-service model, competitive moat versus FBR/Toggle/CyBe/All3, and what the Series B capital unlocks (especially US expansion). Talking points should lean on traction numbers and the acceleration story (nearly half of all homes built in the last 3 months).`,
+    'Press or media visit': `This is a press/media visit — treat this as a media-training brief, not just a content brief. Likely questions should anticipate the angles a journalist or podcast host would actually chase, including sceptical ones (labour displacement, hardware startup graveyard comparisons like Katerra, whether "wall-as-a-service" is just a pricing gimmick). Talking points should be phrased as quotable, bridgeable lines the host can return to. Do not let this section duplicate the KEY MESSAGE section below — talking points are the supporting material the host can raise if the conversation allows; KEY MESSAGE is the single line the host actively steers back to regardless of what's asked.`,
+    'Prospective contractor / customer': `This is a prospective contractor/customer visit. Likely questions should center on reliability, pricing and billing model, project timelines, quality guarantees, and how Monumental fits alongside their existing subcontractor relationships. Talking points should lean on concrete delivery proof points (100+ homes, school, community centre, hotel, canal walls), the fact that outcome-based pricing removes their capex risk, and — critically — should speak directly to the pipeline and pain point given in the SALES CONTEXT below rather than generic value-prop.`,
+    'Candidate site tour': `This is a candidate site tour. Likely questions should center on culture, growth trajectory, what the role looks like day-to-day, and why join now. Talking points should lean on the founding story (ex-Palantir/Silk team), the pace of the last few months, and the US expansion as a growth signal.`,
+    'Other': `Purpose is non-standard — infer the most relevant angle for likely questions and talking points from the background notes provided.`
+  };
+
+  let mediaBlock = '';
+  if (isPress) {
+    mediaBlock = `
+
+MEDIA PROFILE:
+Outlet / channel: ${outlet || 'not provided'}
+Audience size / reach: ${reach || 'not provided'}
+Why this outlet matters to us: ${whyMatters || 'not provided'}
+Key message to land: ${keyMessage || 'not provided — infer a reasonable one from the company context and note that it should be confirmed'}`;
+  }
+
+  let salesBlock = '';
+  if (isContractor) {
+    salesBlock = `
+
+SALES CONTEXT:
+Active / upcoming projects: ${pipeline || 'not provided'}
+Known pain point: ${painPoint || 'not provided — infer a plausible one from the sector backdrop (labour shortage, cost, delivery risk) and note it should be confirmed'}`;
+  }
+
+  const prompt = `Write a one-page internal briefing document for a colleague at Monumental who is about to host a site visit. Use the company context below to make the brief specific and accurate — reference real details (Atrium, the robot fleet, the Series B, specific competitors, real traction numbers) rather than generic statements. Write in a clear, direct, and concise style — no filler, no corporate padding, no hedging.
+
+COMPANY CONTEXT:
+${COMPANY_CONTEXT}
+
+PURPOSE-SPECIFIC ANGLE:
+${PURPOSE_ANGLES[purpose] || PURPOSE_ANGLES['Other']}
+
+VISIT DETAILS:
+Visitor: ${name}
+Role / organisation: ${role || 'not provided'}
+First point of contact at Monumental: ${contact || 'not specified'}
+Purpose of visit: ${purpose}
+Location: ${location}${isSiteVisit ? ' (active construction site — PPE and site safety apply)' : ' (office — no PPE required)'}
+Approx. duration: ${duration}
+Background notes: ${notes || 'none provided'}
+Team members present: ${team || 'not specified'}
+Shoe size for PPE: ${shoe || 'not provided'}${mediaBlock}${salesBlock}
+
+Structure the output in plain text with these sections, each on its own line starting with the section name in capitals followed by a colon:
+SNAPSHOT: 1-2 sentences on who this person is and why the visit matters. If a first point of contact is specified, open by noting how the relationship originated (e.g. "Introduced via [name/context]") before covering who they are — this gives the host continuity, not just a bio.${isPress ? `
+MEDIA PROFILE: 1-2 sentences assessing the outlet's reach and why covering with them is worth the time investment, using the audience size and "why this matters" info provided — be honest if the stated reach is modest rather than inflating its importance.` : ''}${isContractor ? `
+SALES CONTEXT: 1-2 sentences tying their pipeline and pain point together — what's live for them right now and why that makes this visit timely.` : ''}
+LIKELY QUESTIONS: 3 bullets, phrase-length not full sentences, on what they'll probably ask, grounded in their specific role, the purpose-specific angle above, and real Monumental specifics.
+TALKING POINTS: 3 bullets, phrase-length not full sentences, the host should be ready to raise proactively, drawing on real traction rather than vague claims.${isContractor ? ' At least one bullet must directly address the stated pain point, not generic capability claims.' : ''}${isPress ? `
+KEY MESSAGE: one single line to bridge back to regardless of what's asked, based on the key message provided (or a reasonable inferred one if none was given) — plus, on the next line, one short phrase on how to bridge back to it from a difficult question.` : ''}
+TEAM COVERAGE: if team members were provided, one short line per person on what they cover; if none were provided, a single line noting one host is covering the full visit — skip entirely rather than pad if there's nothing useful to add.
+LOGISTICS: one line stating the location, and how to pace the agenda across the stated duration. ${isSiteVisit ? 'This is a construction site visit — include the PPE/shoe-size note and a brief mention of on-site safety basics (hi-vis, staying clear of active robot work zones).' : 'This is at HQ, not an active site — do not mention PPE or shoe size; instead note any office-specific prep (meeting room, badge/access, parking or transit).'}
+
+HARD LENGTH LIMIT: the entire brief must stay under 180 words total (up to 220 words for press or contractor visits, which carry an extra section) — someone must be able to read the whole thing in under a minute. Bullets are short phrases, not sentences. If you're at risk of running long, cut examples and secondary detail before you cut a section entirely.
+
+Keep it tight and useful, no filler, written for someone who has sixty seconds to scan before the visitor arrives.`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: anthropicHeaders(),
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 600,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.error?.message || `API error (${response.status})`);
+    const text = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n')
+      .trim();
+
+    if (!text) throw new Error('Empty response');
+
+    const formatted = text.replace(
+      /^(SNAPSHOT|MEDIA PROFILE|SALES CONTEXT|LIKELY QUESTIONS|TALKING POINTS|KEY MESSAGE|TEAM COVERAGE|LOGISTICS):/gm,
+      '<strong>$1:</strong>'
+    );
+
+    renderBrief({ name, purpose, role, duration, location, formatted });
+    saveToHistory({ name, purpose, role, duration, location, rawText: text, generatedAt: Date.now() });
+  } catch (err) {
+    output.innerHTML = `<p class="error">Could not generate brief: ${err.message}. Try again.</p>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate brief';
+  }
+});
+
+function renderBrief({ name, purpose, role, duration, location, formatted }) {
+  output.innerHTML = `
+    <div class="brief">
+      <h2>${name}</h2>
+      <p class="sub">${purpose}${role ? ' — ' + role : ''} · ${duration}${location ? ' · ' + location : ''}</p>
+      <div class="brief-content">${formatted}</div>
+    </div>
+  `;
+}
+
+const HISTORY_KEY = 'monumental_visit_briefs';
+
+function getHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToHistory(entry) {
+  const history = getHistory();
+  entry.id = 'brief_' + entry.generatedAt + '_' + Math.random().toString(36).slice(2, 7);
+  history.unshift(entry);
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+  } catch {
+    // storage full or unavailable — history just won't persist this session
+  }
+  renderHistory();
+}
+
+function deleteFromHistory(id) {
+  const history = getHistory().filter(e => e.id !== id);
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch {}
+  renderHistory();
+}
+
+function clearHistory() {
+  try { localStorage.removeItem(HISTORY_KEY); } catch {}
+  renderHistory();
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' · ' +
+    d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderHistory() {
+  const history = getHistory();
+  const list = document.getElementById('history-list');
+  const emptyMsg = document.getElementById('history-empty');
+
+  if (history.length === 0) {
+    emptyMsg.style.display = 'block';
+    list.innerHTML = '';
+    return;
+  }
+  emptyMsg.style.display = 'none';
+
+  list.innerHTML = history.map(e => `
+    <div class="history-item" data-id="${e.id}">
+      <div class="history-main">
+        <div class="history-name">${e.name}</div>
+        <div class="history-meta">${e.purpose}${e.location ? ' · ' + e.location : ''} · ${formatDate(e.generatedAt)}</div>
+      </div>
+      <button class="history-delete" data-delete-id="${e.id}" title="Delete">✕</button>
+    </div>
+  `).join('') + `<button class="history-clear" id="clear-history">Clear all</button>`;
+
+  list.querySelectorAll('.history-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('[data-delete-id]')) return;
+      const entry = history.find(h => h.id === item.dataset.id);
+      if (!entry) return;
+      const formatted = entry.rawText.replace(
+        /^(SNAPSHOT|MEDIA PROFILE|SALES CONTEXT|LIKELY QUESTIONS|TALKING POINTS|KEY MESSAGE|TEAM COVERAGE|LOGISTICS):/gm,
+        '<strong>$1:</strong>'
+      );
+      renderBrief({ name: entry.name, purpose: entry.purpose, role: entry.role, duration: entry.duration, location: entry.location, formatted });
+    });
+  });
+  list.querySelectorAll('[data-delete-id]').forEach(delBtn => {
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteFromHistory(delBtn.dataset.deleteId);
+    });
+  });
+  const clearBtn = document.getElementById('clear-history');
+  if (clearBtn) clearBtn.addEventListener('click', clearHistory);
+}
+
+renderHistory();
+</script>
+
+</body>
+</html>
