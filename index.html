@@ -315,6 +315,11 @@
           <option value="other">Other location</option>
         </select>
 
+        <label style="display:flex; align-items:center; gap:7px; margin:10px 0 0; cursor:pointer; text-transform:none;">
+          <input id="dual-visit" type="checkbox" style="width:auto; margin:0;">
+          <span style="font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--mortar);">Dual visit — also stops at the other location</span>
+        </label>
+
         <div id="site-address-wrap" style="display:none;">
           <label for="site-address">Site address / city</label>
           <input id="site-address" type="text" placeholder="e.g. Assendelft, Noord-Holland — active bricklaying deployment">
@@ -455,11 +460,14 @@ togglePurposeFields();
 
 const locationSelect = document.getElementById('location-type');
 const siteAddressWrap = document.getElementById('site-address-wrap');
+const dualVisitCheckbox = document.getElementById('dual-visit');
 
 function toggleSiteAddress() {
-  siteAddressWrap.style.display = locationSelect.value !== 'hq' ? 'block' : 'none';
+  const hasSiteComponent = locationSelect.value !== 'hq' || dualVisitCheckbox.checked;
+  siteAddressWrap.style.display = hasSiteComponent ? 'block' : 'none';
 }
 locationSelect.addEventListener('change', toggleSiteAddress);
+dualVisitCheckbox.addEventListener('change', toggleSiteAddress);
 toggleSiteAddress();
 
 const researchBtn = document.getElementById('research');
@@ -575,14 +583,18 @@ btn.addEventListener('click', async () => {
   const purpose = document.getElementById('purpose').value;
   const locationType = document.getElementById('location-type').value;
   const siteAddress = document.getElementById('site-address').value.trim();
+  const isDualVisit = document.getElementById('dual-visit').checked;
   const locationLabels = {
     'hq': 'Monumental HQ, Amsterdam (Plantage)',
     'site-nl': `Construction site, Netherlands${siteAddress ? ' — ' + siteAddress : ''}`,
     'site-uk': `Construction site, UK${siteAddress ? ' — ' + siteAddress : ''}`,
     'other': siteAddress || 'Other location (unspecified)'
   };
-  const location = locationLabels[locationType];
-  const isSiteVisit = locationType !== 'hq';
+  let location = locationLabels[locationType];
+  if (isDualVisit) {
+    location += locationType === 'hq' ? ' + a stop at the construction site' : ' + a stop at HQ';
+  }
+  const isSiteVisit = locationType !== 'hq' || isDualVisit;
   const duration = document.getElementById('duration').value;
   const notes = document.getElementById('notes').value.trim();
   const team = document.getElementById('team').value.trim();
@@ -648,6 +660,15 @@ Active / upcoming projects: ${pipeline || 'not provided'}
 Known pain point: ${painPoint || 'not provided — infer a plausible one from the sector backdrop (labour shortage, cost, delivery risk) and note it should be confirmed'}`;
   }
 
+  let logisticsInstruction;
+  if (isDualVisit) {
+    logisticsInstruction = `This is a dual visit covering both HQ and a construction site — cover both briefly: office prep (badge/access) for the HQ portion, and for the site portion you must explicitly state the shoe size figure given (${shoe || 'not provided — flag that it still needs to be collected'}) for PPE plus a one-phrase safety basic (hi-vis, staying clear of active robot work zones). Do not just say "PPE required" — name the actual size.`;
+  } else if (isSiteVisit) {
+    logisticsInstruction = `This is a construction site visit — you must explicitly state the shoe size figure given (${shoe || 'not provided — flag that it still needs to be collected'}) for PPE, plus a brief mention of on-site safety basics (hi-vis, staying clear of active robot work zones). Do not just say "PPE required" — name the actual size.`;
+  } else {
+    logisticsInstruction = `This is at HQ, not an active site — do not mention PPE or shoe size; instead note any office-specific prep (meeting room, badge/access, parking or transit).`;
+  }
+
   const prompt = `Write a one-page internal briefing document for a colleague at Monumental who is about to host a site visit. Use the company context below to make the brief specific and accurate — reference real details (Atrium, the robot fleet, the Series B, specific competitors, real traction numbers) rather than generic statements. Write in a clear, direct, and concise style — no filler, no corporate padding, no hedging.
 
 COMPANY CONTEXT:
@@ -675,7 +696,7 @@ LIKELY QUESTIONS: 3 bullets, phrase-length not full sentences, on what they'll p
 TALKING POINTS: 3 bullets, phrase-length not full sentences, the host should be ready to raise proactively, drawing on real traction rather than vague claims.${isContractor ? ' At least one bullet must directly address the stated pain point, not generic capability claims.' : ''}${isPress ? `
 KEY MESSAGE: one single line to bridge back to regardless of what's asked, based on the key message provided (or a reasonable inferred one if none was given) — plus, on the next line, one short phrase on how to bridge back to it from a difficult question.` : ''}
 TEAM COVERAGE: if team members were provided, one short line per person on what they cover; if none were provided, a single line noting one host is covering the full visit — skip entirely rather than pad if there's nothing useful to add.
-LOGISTICS: one line stating the location, and how to pace the agenda across the stated duration. ${isSiteVisit ? 'This is a construction site visit — include the PPE/shoe-size note and a brief mention of on-site safety basics (hi-vis, staying clear of active robot work zones).' : 'This is at HQ, not an active site — do not mention PPE or shoe size; instead note any office-specific prep (meeting room, badge/access, parking or transit).'}
+LOGISTICS: one line stating the location, and how to pace the agenda across the stated duration. ${logisticsInstruction}
 
 HARD LENGTH LIMIT: the entire brief must stay under 180 words total (up to 220 words for press or contractor visits, which carry an extra section) — someone must be able to read the whole thing in under a minute. Bullets are short phrases, not sentences. If you're at risk of running long, cut examples and secondary detail before you cut a section entirely.
 
